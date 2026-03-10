@@ -38,9 +38,16 @@ jobs:
           npm run format:fix
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage everything EXCEPT workflows
           git add .
-          git diff --cached --quiet || git commit -m "chore: auto-fix Prettier formatting"
-          git push origin HEAD:${{ github.head_ref }}
+          git restore --staged .github/workflows/ || true
+
+          # Commit only if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: auto-fix Prettier formatting"
+            git push origin HEAD:${{ github.head_ref }}
+          fi
 
   # --------------------------------
   # 2️⃣ dev → test (Lint + Coverage)
@@ -72,7 +79,9 @@ jobs:
           const data = JSON.parse(fs.readFileSync('./coverage/coverage-summary.json'));
           console.log(data.total.lines.pct);
           ")
+
           echo "Coverage: $COVERAGE%"
+
           if [ "$(printf "%.0f" $COVERAGE)" -lt 80 ]; then
             echo "Coverage below 80%"
             exit 1

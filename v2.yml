@@ -12,7 +12,6 @@ permissions:
   pull-requests: write
 
 jobs:
-
   # --------------------------------
   # 1️⃣ feature → dev (Prettier)
   # --------------------------------

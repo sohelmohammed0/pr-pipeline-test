@@ -39,13 +39,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Stage everything
+          # Stage everything except workflows
           git add .
-
-          # Unstage workflow files (prevent permission error)
           git reset .github/ || true
 
-          # Commit only if there are changes
+          # Commit only if changes exist
           if ! git diff --cached --quiet; then
             git commit -m "chore: auto-fix Prettier formatting"
             git push origin HEAD:${{ github.head_ref }}
@@ -96,9 +94,16 @@ jobs:
     if: github.base_ref == 'prod' && github.head_ref == 'test'
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
       - name: Enable Auto Merge
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          merge-method: squash
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} \
+            --squash \
+            --auto \
+            --repo ${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
